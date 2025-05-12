@@ -1,8 +1,8 @@
 // ignore_for_file: use_build_context_synchronously, avoid_print, unnecessary_cast
 
 import 'package:flutter/material.dart';
-import 'package:forklift_ios/services/connect_supabase.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_forklift/services/connect_supabase.dart';
 
 class CheckPage extends StatefulWidget {
   const CheckPage({super.key});

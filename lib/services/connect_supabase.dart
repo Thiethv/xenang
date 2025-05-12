@@ -1,6 +1,7 @@
 // ignore_for_file: avoid_print
 
-import 'package:forklift_ios/main.dart';
+
+import 'package:supabase_forklift/main.dart';
 
 class ConnectSupabase{
   // Lấy dữ liệu từ supbase

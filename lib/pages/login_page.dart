@@ -1,9 +1,10 @@
 // ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
-import 'package:forklift_ios/pages/fristpage.dart';
-import 'package:forklift_ios/services/connect_supabase.dart';
-import 'package:forklift_ios/utils/dialog_login.dart';
+
+import '../services/connect_supabase.dart';
+import '../utils/dialog_login.dart';
+import 'fristpage.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:forklift_ios/services/connect_supabase.dart';
+import 'package:supabase_forklift/services/connect_supabase.dart';
 
 class StockPage extends StatefulWidget {
   const StockPage({super.key});

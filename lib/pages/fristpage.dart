@@ -1,9 +1,10 @@
 // ignore_for_file: no_leading_underscores_for_local_identifiers
 
 import 'package:flutter/material.dart';
-import 'package:forklift_ios/pages/check_page.dart';
-import 'package:forklift_ios/pages/receipt_page.dart';
-import 'package:forklift_ios/pages/stock_page.dart';
+import 'package:supabase_forklift/pages/check_page.dart';
+import 'package:supabase_forklift/pages/receipt_page.dart';
+import 'package:supabase_forklift/pages/stock_page.dart';
+
 
 class Fristpage extends StatefulWidget {
   final String username;
