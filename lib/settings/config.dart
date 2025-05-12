@@ -1,4 +1,0 @@
-// ignore_for_file: constant_identifier_names
-
-const String API_URL = "https://ifpjhpzfqjlegdnnlmxj.supabase.co";
-const String API_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlmcGpocHpmcWpsZWdkbm5sbXhqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzIwMDM1MDIsImV4cCI6MjA0NzU3OTUwMn0.4AakcvcBPBQ2JEE9nLBAygCe28R8CPT1LaVGfHEdwM0";
