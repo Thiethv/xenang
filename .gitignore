@@ -30,9 +30,7 @@ migrate_working_dir/
 .pub-cache/
 .pub/
 /build/
-# .gitignore
 lib/settings/config.dart
-
 
 # Symbolication related
 app.*.symbols
