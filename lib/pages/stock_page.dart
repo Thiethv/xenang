@@ -26,7 +26,7 @@ class _StockPageState extends State<StockPage> {
                 return const Center(child: CircularProgressIndicator(),);
               }
 
-              _dropdownDocno = snapshot.data!.map((doc) => doc['DOC_NO'].toString()).toSet().toList();
+              _dropdownDocno = snapshot.data!.map((doc) => doc['doc_no'].toString()).toSet().toList();
 
               return Container(
                 width: 350,
