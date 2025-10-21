@@ -5,7 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:supabase_forklift/services/connect_supabase.dart';
 
 class CheckPage extends StatefulWidget {
-  const CheckPage({super.key});
+  final String factory;
+  const CheckPage({super.key, required this.factory});
 
   @override
   State<CheckPage> createState() => _CheckPageState();
@@ -17,7 +18,7 @@ class _CheckPageState extends State<CheckPage> {
 
   final connectSupabase = ConnectSupabase();
   List<Map<String, dynamic>> matchingDocs = [];
-  
+
   @override
   void dispose() {
     _ngayNhapController.dispose();
@@ -28,19 +29,22 @@ class _CheckPageState extends State<CheckPage> {
   void seachLocationDate() async {
     String location = _viTriController.text.trim();
     String dateStr = _ngayNhapController.text.trim();
-    dateStr = dateStr.isNotEmpty? convertDateFormat(dateStr):dateStr;
+    dateStr = dateStr.isNotEmpty ? convertDateFormat(dateStr) : dateStr;
     try {
-      List<Map<String, dynamic>>? docs = await connectSupabase.checkLocationDate(location.isNotEmpty ? location: null, dateStr.isNotEmpty ? dateStr: null);
+      List<Map<String, dynamic>>? docs =
+          await connectSupabase.checkLocationDate(
+              location.isNotEmpty ? location : null,
+              dateStr.isNotEmpty ? dateStr : null,
+              widget.factory);
       setState(() {
         matchingDocs = docs!;
       });
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không tìm thấy dữ liệu')),
-        );
-        return;
+        const SnackBar(content: Text('Không tìm thấy dữ liệu')),
+      );
+      return;
     }
-
   }
 
   String convertDateFormat(String inputDate) {
@@ -67,161 +71,172 @@ class _CheckPageState extends State<CheckPage> {
               children: [
                 Expanded(
                   child: TextField(
-                    controller: _ngayNhapController,
-                    decoration: InputDecoration(
-                      border: const UnderlineInputBorder(),
-                      hintText: 'Ngày nhập',
-                      hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5))
-                    )
-                  ),
+                      controller: _ngayNhapController,
+                      decoration: InputDecoration(
+                          border: const UnderlineInputBorder(),
+                          hintText: 'Ngày nhập',
+                          hintStyle:
+                              TextStyle(color: Colors.grey.withOpacity(0.5)))),
                 ),
-
-                const SizedBox(width: 10,),
-        
+                const SizedBox(
+                  width: 10,
+                ),
                 Expanded(
                   child: TextField(
                     controller: _viTriController,
                     decoration: InputDecoration(
-                      border: const UnderlineInputBorder(),
-                      hintText: 'Vị trí',
-                      hintStyle: TextStyle(color: Colors.grey.withOpacity(0.5))
-                    ),
-                    onChanged: (value){
+                        border: const UnderlineInputBorder(),
+                        hintText: 'Vị trí',
+                        hintStyle:
+                            TextStyle(color: Colors.grey.withOpacity(0.5))),
+                    onChanged: (value) {
                       _viTriController.value = _viTriController.value.copyWith(
-                        text: value.toUpperCase(),
-                        selection: TextSelection.fromPosition(
-                         TextPosition(offset: value.length) 
-                        )
-                      );
-
+                          text: value.toUpperCase(),
+                          selection: TextSelection.fromPosition(
+                              TextPosition(offset: value.length)));
                     },
                   ),
                 )
               ],
             ),
-        
-            const SizedBox(height: 20,),
-        
-            ElevatedButton(
-              onPressed: seachLocationDate, 
-              child: const Text('TÌM KIẾM', style: TextStyle(fontWeight: FontWeight.bold),)
+            const SizedBox(
+              height: 20,
             ),
-
-            const SizedBox(height: 15,),
-
+            ElevatedButton(
+                onPressed: seachLocationDate,
+                child: const Text(
+                  'TÌM KIẾM',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                )),
+            const SizedBox(
+              height: 15,
+            ),
             const Row(
               children: [
                 Expanded(
-                  flex: 1,
-                  child: Text(
-                    'VỊ TRÍ',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blueGrey),
-                    textAlign: TextAlign.center, 
-                  )
-                ),
+                    flex: 1,
+                    child: Text(
+                      'VỊ TRÍ',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.blueGrey),
+                      textAlign: TextAlign.center,
+                    )),
                 Expanded(
-                  flex: 1,
-                  child: Text(
-                    'THÙNG',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blueGrey),
-                    textAlign: TextAlign.center,
-                  )
-                ),
+                    flex: 1,
+                    child: Text(
+                      'THÙNG',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.blueGrey),
+                      textAlign: TextAlign.center,
+                    )),
                 Expanded(
-                  flex: 1,
-                  child: Text(
-                    'XE NÂNG',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blueGrey),
-                    textAlign: TextAlign.center,
-                  )
-                ),
+                    flex: 1,
+                    child: Text(
+                      'XE NÂNG',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.blueGrey),
+                      textAlign: TextAlign.center,
+                    )),
                 Expanded(
-                  flex: 2,
-                  child: Text(
-                    'NGÀY/GIỜ',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blueGrey),
-                    textAlign: TextAlign.center,
-                  )
-                ),
+                    flex: 2,
+                    child: Text(
+                      'NGÀY/GIỜ',
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                          color: Colors.blueGrey),
+                      textAlign: TextAlign.center,
+                    )),
               ],
             ),
-
-            const SizedBox(height: 20,),
-
+            const SizedBox(
+              height: 20,
+            ),
             Expanded(
               child: matchingDocs.isEmpty
-                ? const SizedBox.shrink()
-                : ListView.builder(
-                    itemCount: matchingDocs.length,
-                    itemBuilder: (context, index) {
-                      final data = matchingDocs[index] as Map<String, dynamic>;
-                      String location = data['LOCATION'] ?? '';
-                      int carton = data['UCC'] ?? 0;
-                      String driver = data['DRIVER'] ?? '';
-                      String date = data['DATE'] ?? '';
+                  ? const SizedBox.shrink()
+                  : ListView.builder(
+                      itemCount: matchingDocs.length,
+                      itemBuilder: (context, index) {
+                        final data =
+                            matchingDocs[index] as Map<String, dynamic>;
+                        String location = data['LOCATION'] ?? '';
+                        int carton = data['UCC'] ?? 0;
+                        String driver = data['DRIVER'] ?? '';
+                        String date = data['DATE'] ?? '';
 
-                      if (date.isNotEmpty) {
-                        DateTime dateTime = DateTime.parse(date);
-                        date = DateFormat('dd-MM HH:mm:ss').format(dateTime);
-                      }
+                        if (date.isNotEmpty) {
+                          DateTime dateTime = DateTime.parse(date);
+                          date = DateFormat('dd-MM HH:mm:ss').format(dateTime);
+                        }
 
-                      return Column(
-                        children: [
-                          SizedBox(
-                            height: 30,
-                            child: ListTile(
-                              title: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 3.0),
+                        return Column(
+                          children: [
+                            SizedBox(
+                              height: 30,
+                              child: ListTile(
+                                  title: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 3.0),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.max,
-                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceAround,
                                   children: [
                                     Expanded(
-                                      flex: 1,
-                                      child: Text(
-                                        location,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                        textAlign: TextAlign.center,
-                                      )
-                                    ),
+                                        flex: 1,
+                                        child: Text(
+                                          location,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14),
+                                          textAlign: TextAlign.center,
+                                        )),
                                     Expanded(
-                                      flex: 1,
-                                      child: Text(
-                                        carton.toString(),
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                        textAlign: TextAlign.center,
-                                      )
-                                    ),
+                                        flex: 1,
+                                        child: Text(
+                                          carton.toString(),
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14),
+                                          textAlign: TextAlign.center,
+                                        )),
                                     Expanded(
-                                      flex: 1,
-                                      child: Text(
-                                        driver,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                        textAlign: TextAlign.center,
-                                      )
-                                    ),
+                                        flex: 1,
+                                        child: Text(
+                                          driver,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14),
+                                          textAlign: TextAlign.center,
+                                        )),
                                     Expanded(
-                                      flex: 2,
-                                      child: Text(
-                                        date,
-                                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                                        textAlign: TextAlign.center,
-                                      )
-                                    ),
+                                        flex: 2,
+                                        child: Text(
+                                          date,
+                                          style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14),
+                                          textAlign: TextAlign.center,
+                                        )),
                                   ],
                                 ),
-                              )
+                              )),
                             ),
-                          ),
-
-                          const Divider(
-                            thickness: 1,
-                            color: Colors.grey,
-                          )
-                        ],
-                      );
-                    },
-                  ),
+                            const Divider(
+                              thickness: 1,
+                              color: Colors.grey,
+                            )
+                          ],
+                        );
+                      },
+                    ),
             ),
           ],
         ),

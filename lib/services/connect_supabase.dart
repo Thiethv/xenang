@@ -1,103 +1,104 @@
-// ignore_for_file: avoid_print
+// ignore_for_file: avoid_print, unused_import
 
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:supabase_forklift/main.dart';
 
-class ConnectSupabase{
+class ConnectSupabase {
   // Lấy dữ liệu từ supbase
-  Stream<List<Map<String, dynamic>>> streamDataReceipt () {
+  Stream<List<Map<String, dynamic>>> streamDataReceipt(String factory) {
     return supabase
-          .from("receipt")
-          .stream(primaryKey: ['id'])
-          .eq("DRIVER", 'NOTVALUE')
-          .order("id", ascending: true);
+        .from("receipt")
+        .stream(primaryKey: ['id'])
+        .eq('factory', factory)
+        .order("id", ascending: true);
   }
 
-  Stream<List<Map<String, dynamic>>> streamDocno(){
+  Stream<List<Map<String, dynamic>>> streamDocno(String factory) {
     return supabase
-          .from("repack")
-          .stream(primaryKey: ['id']);
+        .from("repack")
+        .stream(primaryKey: ['id']).eq("factory", factory);
   }
 
-  Stream<List<Map<String,dynamic>>> streamDataStock(String table, String docno){
+  Stream<List<Map<String, dynamic>>> streamDataStock(
+      String table, String docno) {
     return supabase
-          .from(table)
-          .stream(primaryKey: ['id'])
-          .eq("DOC_NO", docno)
-          .order("LOCATION", ascending: true);
+        .from(table)
+        .stream(primaryKey: ['id'])
+        .eq("DOC_NO", docno)
+        .order("LOCATION", ascending: true);
   }
 
-  Future<List<Map<String, dynamic>>> checkLogin(String userValue, String passvalue) async{
-    try{
+  Future<Map<String, dynamic>?> getUser(String username) async {
+    try {
+      // **SỬA LỖI:** Dùng .maybeSingle() thay vì .single()
+      // .maybeSingle() sẽ trả về null nếu không tìm thấy, thay vì ném ra lỗi.
       final response = await supabase
-                                    .from("account")
-                                    .select()
-                                    .match({'username': userValue, 'password': passvalue});
+          .from("account")
+          .select()
+          .eq('username', username)
+          .maybeSingle();
       return response;
-    }catch(e){
-      return [];
+    } catch (e) {
+      print('Lỗi không xác định khi lấy user: $e');
+      return null;
     }
   }
 
-  Future<void> updatePassWord (String user, String passOld, String passNew) async {
+  Future<void> updatePassWord(String user, String newHashedPassword) async {
     try {
       await supabase
-        .from('account')
-        .update({'password': passNew})
-        .match({'username': user, 'password': passOld});
-    } catch(e){
+          .from('account')
+          .update({'password': newHashedPassword}).match({'username': user});
+    } catch (e) {
       print(e);
     }
   }
 
-  Future<void> updateReceipt(String driver, String selectValue, String newDate, int carton, int id) async {
+  Future<void> updateReceipt(String driver, String selectValue, String newDate,
+      int carton, int id) async {
     try {
       await supabase
-        .from('receipt')
-        .update({'DRIVER': driver, 'DATE': newDate})
-        .match({'LOCATION': selectValue, 'UCC': carton, 'DRIVER': 'NOTVALUE', 'id': id});
-      
+          .from('receipt')
+          .update({'DRIVER': driver, 'DATE': newDate}).match({
+        'LOCATION': selectValue,
+        'UCC': carton,
+        'DRIVER': 'NOTVALUE',
+        'id': id
+      });
     } catch (e) {
       print("Error updating receipt: $e");
     }
   }
 
-  Future<void> deleteReceipt (String selectValue, int carton, int id) async {
+  Future<void> deleteReceipt(int id) async {
     try {
-      await supabase
-        .from('receipt')
-        .delete()
-        .match({'LOCATION': selectValue, 'UCC': carton, 'DRIVER': 'NOTVALUE', 'id': id});
-      
+      await supabase.from('receipt').delete().match({'id': id});
     } catch (e) {
-      print("Error updating receipt: $e");
+      print("Error deleting receipt: $e");
+      rethrow;
     }
   }
 
-  Future<List<Map<String, dynamic>>?> checkLocationDate(String? location, String? checkDate) async {
+  Future<List<Map<String, dynamic>>?> checkLocationDate(
+      String? location, String? checkDate, String factory) async {
     try {
-      // Chuyển ngày từ 'yyyy-MM-dd' thành khoảng thời gian
-      String startDate = "$checkDate 00:00:00";
-      String endDate = "$checkDate 23:59:59";
+      String? startDate = checkDate != null && checkDate.isNotEmpty
+          ? "$checkDate 00:00:00"
+          : null;
+      String? endDate = checkDate != null && checkDate.isNotEmpty
+          ? "$checkDate 23:59:59"
+          : null;
 
-      // Thực hiện truy vấn
-      final result = location != null && checkDate != null
-          ? await supabase
-              .from('receipt')
-              .select()
-              .eq('LOCATION', location)
-              .gte('DATE', startDate)
-              .lte('DATE', endDate)
-          : location != null
-              ? await supabase.from('receipt').select().eq('LOCATION', location)
-              : checkDate != null
-                  ? await supabase
-                      .from('receipt')
-                      .select()
-                      .gte('DATE', startDate)
-                      .lte('DATE', endDate)
-                  : await supabase.from('receipt').select();
+      var query = supabase.from('receipt').select().eq('factory', factory);
 
+      if (location != null && location.isNotEmpty) {
+        query = query.eq('LOCATION', location);
+      }
+      if (startDate != null && endDate != null) {
+        query = query.gte('DATE', startDate).lte('DATE', endDate);
+      }
+
+      final result = await query;
       return result;
     } catch (e) {
       print("Error fetching data: $e");
@@ -105,4 +106,48 @@ class ConnectSupabase{
     }
   }
 
+  // --- Chức năng quản lý người dùng ---
+
+  Stream<List<Map<String, dynamic>>> getUsersStream(String factory) {
+    return supabase
+        .from('account')
+        .stream(primaryKey: ['id'])
+        .eq('factory', factory)
+        .order('username', ascending: true);
+  }
+
+  Future<void> addUser(String username, String hashedPassword, String factory,
+      String role) async {
+    // **CẬP NHẬT:** Kiểm tra xem username đã tồn tại chưa trước khi thêm.
+    final existingUser = await getUser(username);
+    if (existingUser != null) {
+      // Ném ra một lỗi cụ thể để UI có thể bắt và hiển thị.
+      throw 'Tên đăng nhập "$username" đã tồn tại.';
+    }
+
+    // Nếu chưa tồn tại, tiến hành thêm mới.
+    await supabase.from('account').insert({
+      'username': username,
+      'password': hashedPassword,
+      'factory': factory,
+      'role': role,
+    });
+  }
+
+  Future<void> updateUser(int id, String username, String? hashedPassword,
+      String factory, String role) async {
+    final updates = {
+      'username': username,
+      'factory': factory,
+      'role': role,
+    };
+    if (hashedPassword != null && hashedPassword.isNotEmpty) {
+      updates['password'] = hashedPassword;
+    }
+    await supabase.from('account').update(updates).eq('id', id);
+  }
+
+  Future<void> deleteUser(int id) async {
+    await supabase.from('account').delete().eq('id', id);
+  }
 }

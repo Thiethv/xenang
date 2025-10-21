@@ -1,10 +1,10 @@
 name: supabase_forklift
 description: "A new Flutter project."
-publish_to: 'none'
+publish_to: "none"
 version: 0.1.0
 
 environment:
-  sdk: '>=3.4.3 <4.0.0'
+  sdk: ">=3.4.3 <4.0.0"
 
 dependencies:
   flutter:
@@ -17,6 +17,8 @@ dependencies:
   flutter_slidable: ^3.1.0
 
   flutter_dotenv: ^5.1.0
+
+  crypto: ^3.0.3
 
 dev_dependencies:
   flutter_test:
@@ -32,4 +34,3 @@ flutter_icons:
   android: true
   ios: true
   image_path: "assets/icon/XN.png"
-

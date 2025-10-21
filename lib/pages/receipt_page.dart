@@ -1,4 +1,4 @@
-// ignore_for_file: unnecessary_cast, avoid_print
+// ignore_for_file: use_build_context_synchronously
 
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -8,7 +8,13 @@ import '../services/connect_supabase.dart';
 
 class ReceiptPage extends StatefulWidget {
   final String username;
-  const ReceiptPage({super.key, required this.username});
+  final String factory;
+
+  const ReceiptPage({
+    super.key,
+    required this.username,
+    required this.factory,
+  });
 
   @override
   State<ReceiptPage> createState() => _ReceiptPageState();
@@ -16,24 +22,59 @@ class ReceiptPage extends StatefulWidget {
 
 class _ReceiptPageState extends State<ReceiptPage> {
   final connectSupabase = ConnectSupabase();
-  String newDate = '';
+  // **SỬA LỖI:** Chuyển stream thành biến có thể thay đổi để làm mới thủ công
+  late Stream<List<Map<String, dynamic>>> _receiptStream;
+
+  @override
+  void initState() {
+    super.initState();
+    // Khởi tạo stream lần đầu
+    _receiptStream = connectSupabase.streamDataReceipt(widget.factory);
+  }
+
+  // **SỬA LỖI:** Hàm để làm mới stream và cập nhật UI
+  void _refreshData() {
+    setState(() {
+      _receiptStream = connectSupabase.streamDataReceipt(widget.factory);
+    });
+  }
 
   void confirmLocation(int id, String selectedLocation, int carton) async {
-    newDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
-    await connectSupabase.updateReceipt(widget.username, selectedLocation, newDate, carton, id);
-    refreshData();
+    final newDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
+    try {
+      await connectSupabase.updateReceipt(
+          widget.username, selectedLocation, newDate, carton, id);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Xác nhận thành công!'),
+            backgroundColor: Colors.green),
+      );
+      // Real-time hoạt động tốt cho update, không cần refresh thủ công
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+            content: Text('Lỗi khi xác nhận: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
-  void deleteLocation(int id, String selectedLocation, int carton) async {
+  void deleteLocation(int id) async {
+    try {
+      await connectSupabase.deleteReceipt(id);
 
-    await connectSupabase.deleteReceipt(selectedLocation, carton, id);
-    refreshData();
-  }
+      // **SỬA LỖI:** Gọi hàm làm mới thủ công sau khi xóa
+      // Đây là giải pháp tạm thời nếu real-time không hoạt động cho việc xóa
+      _refreshData();
 
-  void refreshData() {
-    setState(() {
-      connectSupabase.streamDataReceipt();
-    });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Xóa thành công!'), backgroundColor: Colors.green),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi xóa: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -41,134 +82,156 @@ class _ReceiptPageState extends State<ReceiptPage> {
     return Scaffold(
       body: Column(
         children: [
-          const SizedBox(height: 15,),
+          const SizedBox(
+            height: 15,
+          ),
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 5.0),
             child: Row(
-              mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
                 Expanded(
                   flex: 2,
-                  child: Text('VỊ TRÍ',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue),
+                  child: Text(
+                    'VỊ TRÍ',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.blue),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 Expanded(
                   flex: 2,
-                  child: Text('Kho_Style',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue),
+                  child: Text(
+                    'Kho_Style',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.blue),
                     textAlign: TextAlign.center,
                   ),
                 ),
                 Expanded(
                   flex: 1,
-                  child: Text('THÙNG',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.blue),
+                  child: Text(
+                    'THÙNG',
+                    style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                        color: Colors.blue),
                     textAlign: TextAlign.center,
                   ),
                 ),
               ],
             ),
           ),
-
-          const SizedBox(height: 15,),
-
+          const SizedBox(
+            height: 15,
+          ),
           Expanded(
             child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: connectSupabase.streamDataReceipt(),
+              stream: _receiptStream,
               builder: (context, snapshot) {
-                if (!snapshot.hasData){
-                  return const Center(child: CircularProgressIndicator(),);
-                } else if (snapshot.hasError) {
-                  return const Center(child: Text('Something went wrong!'));
-                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const Center(child: Text('Không có hàng nhập.'));
-                } else{
-                  List<Map<String, dynamic>> noteList = snapshot.data!;
-                  return ListView.builder(
-                    itemCount: noteList.length,
-                    itemBuilder: (context, index) {
-                      Map<String, dynamic> document = noteList[index];
-                      Map<String, dynamic> data = document;
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  return Center(
+                      child: Text('Đã xảy ra lỗi: ${snapshot.error}'));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text('Không có hàng chờ nhập.'));
+                }
 
-                      int id = document['id'] ?? 0;
-                      String location = data['LOCATION'] ?? '';
-                      String style = data['STYLE_NO'] ?? '';
-                      int carton = data['UCC'] ?? 0;
-                      String store = data['STORE'] ?? '';
-                      if (style.length > 4){
-                        style = style.substring(style.length-4);
-                      }
-                      
-                      String poSty = '$store-$style';
-                                    
-                      return Slidable(
-                        endActionPane: ActionPane(
-                          motion: const StretchMotion(), 
-                          children: [
-                            SlidableAction(
-                              onPressed: (context) => confirmLocation(id, location, carton),
-                              icon: Icons.check,
-                              backgroundColor: Colors.green.shade300,
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            SlidableAction(
-                                onPressed: (context) => deleteLocation(id, location, carton),
-                                icon: Icons.delete,
-                                backgroundColor: Colors.red.shade300,
-                                borderRadius: BorderRadius.circular(10),
-                              )
-                          ]
+                final noteList = snapshot.data!
+                    .where((doc) => doc['DRIVER'] == 'NOTVALUE')
+                    .toList();
+
+                if (noteList.isEmpty) {
+                  return const Center(child: Text('Không có hàng chờ nhập.'));
+                }
+
+                return ListView.builder(
+                  itemCount: noteList.length,
+                  itemBuilder: (context, index) {
+                    final document = noteList[index];
+
+                    final int id = document['id'] ?? 0;
+                    final String location = document['LOCATION'] ?? '';
+                    String style = document['STYLE_NO'] ?? '';
+                    final int carton = document['UCC'] ?? 0;
+                    final String store = document['STORE'] ?? '';
+
+                    if (style.length > 4) {
+                      style = style.substring(style.length - 4);
+                    }
+                    final String poSty = '$store-$style';
+
+                    return Slidable(
+                      key: ValueKey(id),
+                      endActionPane:
+                          ActionPane(motion: const StretchMotion(), children: [
+                        SlidableAction(
+                          onPressed: (context) =>
+                              confirmLocation(id, location, carton),
+                          icon: Icons.check,
+                          backgroundColor: Colors.green.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                          label: 'Xác nhận',
                         ),
-                        child: Card(              
-                          child: ListTile(
-                            title: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 5.0),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.max,
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: [
-                                  Expanded(
-                                    flex: 2,
-                                    child: Text(
-                                      location,
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
-                                      textAlign: TextAlign.center,
-                                    )
-                                  ),
-                                  Expanded(
-                                    flex: 2,
-                                      child: Text(poSty,
-                                      style: const TextStyle(fontWeight: FontWeight.normal, fontSize: 16),
-                                      textAlign: TextAlign.center,
-                                  )
-                                  
-                                  ),
-                              
-                                  Expanded(
-                                    flex: 1,
-                                      child: Text(carton.toString(),
-                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20, color: Colors.blue),
-                                      textAlign: TextAlign.center,)
-                                  
-                                  )
-                                ],
-                              ),
-                            ),
+                        SlidableAction(
+                          onPressed: (context) => deleteLocation(id),
+                          icon: Icons.delete,
+                          backgroundColor: Colors.red.shade300,
+                          borderRadius: BorderRadius.circular(10),
+                          label: 'Xóa',
+                        )
+                      ]),
+                      child: Card(
+                        margin: const EdgeInsets.symmetric(
+                            horizontal: 8, vertical: 4),
+                        child: ListTile(
+                          title: Row(
+                            children: [
+                              Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    location,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20),
+                                    textAlign: TextAlign.center,
+                                  )),
+                              Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    poSty,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.normal,
+                                        fontSize: 16),
+                                    textAlign: TextAlign.center,
+                                  )),
+                              Expanded(
+                                  flex: 1,
+                                  child: Text(
+                                    carton.toString(),
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 20,
+                                        color: Colors.blue),
+                                    textAlign: TextAlign.center,
+                                  ))
+                            ],
                           ),
                         ),
-                      );
-
-                    },
-                  );
-                }
-                
-              },            
-            )
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
           ),
-
         ],
       ),
     );
