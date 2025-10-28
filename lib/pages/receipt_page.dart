@@ -29,21 +29,23 @@ class _ReceiptPageState extends State<ReceiptPage> {
   void initState() {
     super.initState();
     // Khởi tạo stream lần đầu
-    _receiptStream = connectSupabase.streamDataReceipt(widget.factory);
+    _receiptStream = connectSupabase.streamDataReceipt();
   }
 
   // **SỬA LỖI:** Hàm để làm mới stream và cập nhật UI
   void _refreshData() {
     setState(() {
-      _receiptStream = connectSupabase.streamDataReceipt(widget.factory);
+      _receiptStream = connectSupabase.streamDataReceipt();
     });
   }
 
-  void confirmLocation(int id, String selectedLocation, int carton) async {
+  void confirmLocation(int id) async {
     final newDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
     try {
-      await connectSupabase.updateReceipt(
-          widget.username, selectedLocation, newDate, carton, id);
+      await connectSupabase.updateReceipt(widget.username, newDate, id);
+
+      _refreshData();
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
             content: Text('Xác nhận thành công!'),
@@ -140,12 +142,13 @@ class _ReceiptPageState extends State<ReceiptPage> {
                   return Center(
                       child: Text('Đã xảy ra lỗi: ${snapshot.error}'));
                 }
+
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text('Không có hàng chờ nhập.'));
                 }
 
                 final noteList = snapshot.data!
-                    .where((doc) => doc['DRIVER'] == 'NOTVALUE')
+                    .where((doc) => doc['factory'] == widget.factory)
                     .toList();
 
                 if (noteList.isEmpty) {
@@ -173,8 +176,7 @@ class _ReceiptPageState extends State<ReceiptPage> {
                       endActionPane:
                           ActionPane(motion: const StretchMotion(), children: [
                         SlidableAction(
-                          onPressed: (context) =>
-                              confirmLocation(id, location, carton),
+                          onPressed: (context) => confirmLocation(id),
                           icon: Icons.check,
                           backgroundColor: Colors.green.shade300,
                           borderRadius: BorderRadius.circular(10),

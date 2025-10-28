@@ -183,7 +183,7 @@ class _StockPageState extends State<StockPage> {
                                   children: [
                                     ListTile(
                                       title: Text(
-                                        '${data['LOCATION'] ?? ''}     ${data['CARTON'] ?? ''}',
+                                        '${data['LOCATION'] ?? ''}     ${data['UCC_NO'] ?? ''}',
                                         style: const TextStyle(
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14),

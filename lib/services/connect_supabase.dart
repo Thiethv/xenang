@@ -5,11 +5,12 @@ import 'package:supabase_forklift/main.dart';
 
 class ConnectSupabase {
   // Lấy dữ liệu từ supbase
-  Stream<List<Map<String, dynamic>>> streamDataReceipt(String factory) {
+  Stream<List<Map<String, dynamic>>> streamDataReceipt() {
     return supabase
         .from("receipt")
         .stream(primaryKey: ['id'])
-        .eq('factory', factory)
+        // .eq('factory', factory)
+        .eq('DRIVER', 'NOTVALUE')
         .order("id", ascending: true);
   }
 
@@ -54,17 +55,11 @@ class ConnectSupabase {
     }
   }
 
-  Future<void> updateReceipt(String driver, String selectValue, String newDate,
-      int carton, int id) async {
+  Future<void> updateReceipt(String driver, String newDate, int id) async {
     try {
       await supabase
           .from('receipt')
-          .update({'DRIVER': driver, 'DATE': newDate}).match({
-        'LOCATION': selectValue,
-        'UCC': carton,
-        'DRIVER': 'NOTVALUE',
-        'id': id
-      });
+          .update({'DRIVER': driver, 'DATE': newDate}).match({'id': id});
     } catch (e) {
       print("Error updating receipt: $e");
     }
